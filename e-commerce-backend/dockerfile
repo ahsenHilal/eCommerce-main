@@ -1,0 +1,38 @@
+# Backend/Dockerfile
+FROM node:alpine
+
+WORKDIR /e-commerce-backend
+
+# Kopiere package.json und package-lock.json in das Arbeitsverzeichnis
+COPY package.json ./
+#COPY package-lock.json ./
+
+# Installiere die Abhängigkeiten
+RUN npm install
+RUN npm install sequelize
+RUN npm install --save-dev supertest
+RUN npm install --save-dev jest
+RUN npm install jest supertest multer
+RUN npm install cors
+RUN npm install nock --save-dev
+RUN npm install --save-dev jest supertest sequelize-test-helpers
+RUN npm install dotenv
+RUN apk update && apk add postgresql-client
+
+
+
+# Kopiere alle Dateien im aktuellen Verzeichnis (Projektverzeichnis) in das Arbeitsverzeichnis
+COPY . .
+
+
+# Setze die Berechtigungen für das Upload-Verzeichnis
+RUN chmod -R 777 /e-commerce-backend/upload
+
+
+# Öffne Port 4000 und 5063 für den Jest-Server
+EXPOSE 4000
+EXPOSE 5063
+EXPOSE 5432
+
+# Starte die Node.js-Anwendung durch Ausführen von index.js, gefolgt von npm run start
+CMD [ "npm", "run", "start"]
