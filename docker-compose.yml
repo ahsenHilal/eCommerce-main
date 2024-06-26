@@ -1,0 +1,69 @@
+version: '3.8'
+
+networks:
+  mynet:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  
+services:
+  postgres:
+    image: postgres:13
+    networks:
+      - mynet
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./e-commerce-backend/new_dump_db.sql:/docker-entrypoint-initdb.d/new_dump_db.sql
+
+  backend:
+    build: ./e-commerce-backend
+    networks:
+      - mynet
+    ports:
+      - "4000:4000"
+      - "5063:5063"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      PORT: 4000
+      JEST_PORT: 4001
+    depends_on:
+      - postgres
+    volumes:
+      - ./e-commerce-backend:/app  
+      - ./e-commerce-backend/upload:/e-commerce-backend/upload 
+    command: /bin/sh -c "chmod -R 777 /e-commerce-backend/upload && npm run start"
+    
+
+
+  frontend:
+    build: ./e-commerce-frontend
+    networks:
+      - mynet
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+
+  admin:
+    build: ./e-commerce-admin2
+    networks:
+      - mynet
+    ports:
+      - "3005:3005"
+    depends_on:
+      - backend
+    environment:
+      - PORT=3005
+      - REACT_APP_BACKEND_URL=http://backend:4000
+
